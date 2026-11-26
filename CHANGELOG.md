@@ -2,6 +2,7 @@
 
 | Version | Changes |
 |---|---|
+| 0.7.0 | The window no longer floats above LUNA's windows: it is an ordinary window they can cover. |
 | 0.6.1 | API 2500: Comp On drives its power button (the on/off LUNA shows), not the hidden Comp In. |
 | 0.6.0 | **Buses and the Main Output:** selecting one in LUNA follows it, and the track buttons count them in LUNA's order (cue buses skipped). **API 2500** in a console slot: Comp On, Threshold, Ratio, Attack, Release, and Parallel Dry/Wet as Mix; the Comp meter follows the 2500's VU in G/R mode, matched to its printed G/R scale. Strips are now described per plugin, so more can be added. |
 | 0.5.2 | Icon (radar dish). |

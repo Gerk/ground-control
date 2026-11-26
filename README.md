@@ -62,8 +62,9 @@ and meters mirroring LUNA.
 
 1. Download `Ground-Control.lunaaddon` from [Releases](../../releases).
 2. Double-click it, or open it from LUNA. LUNA asks to add it; click **Add**.
-3. Open it from **Add Ons → Windows**. After that it opens with your session and keeps running
-   while its window is hidden.
+3. Open it from **Add Ons → Windows**. It is an ordinary window, so LUNA's other windows can
+   cover it. After that it opens with your session and keeps running while its window is
+   hidden or closed.
 
 **Quit Softube's Console 1 software** (On-Screen Display) first: while it runs it takes over the
 unit. The Console 1 shows up in LUNA as the MIDI device **"Console 1"**; plugging it in later is
