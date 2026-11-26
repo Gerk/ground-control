@@ -46,6 +46,9 @@ and meters mirroring LUNA.
 
 - **LUNA 3.1.2 or later** on macOS. Windows should work but hasn't been tried.
 - A **Softube Console 1 Mk II** over USB. No Softube software is needed.
+- **Softube's Console 1 software must not be running** (the On-Screen Display / Console 1 app).
+  While it runs it takes over the unit, and Ground Control gets nothing from it. Quit it, and
+  turn off its start-at-login if you have it set.
 - Tracks with LUNA's **API Vision** console strip. On other tracks only Volume, Pan, Solo and Mute
   respond.
 
