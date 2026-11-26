@@ -5,10 +5,13 @@
   <meta charset="UTF-8">
   <title>Ground Control</title>
   <style>
-    :root { color-scheme: dark; --accent: #F7C449; --dim: #8a8a8a; --line: #2c2c2c; --bad: #ff8080; --ok: #6fcf7f; }
+    :root { color-scheme: dark; --accent: #F7C449; --accent-rgb: 247, 196, 73; --dim: #8a8a8a; --line: #2c2c2c; --bad: #ff8080; --ok: #6fcf7f; }
     * { box-sizing: border-box; }
     body { margin: 0; background: #151515; color: #ddd; font: 13px/1.35 -apple-system, Helvetica, sans-serif; display: flex; flex-direction: column; height: 100vh; }
-    header { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #222; border-bottom: 1px solid #333; }
+    header { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 10px 12px; background: #222; border-bottom: 1px solid #333; } /* track | strip, centred | controls */
+    header .right { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-width: 0; }
+    #strip { font-size: 12px; color: var(--dim); white-space: nowrap; }
+    #strip.none { color: var(--bad); }
     header .title { font-weight: 600; white-space: nowrap; flex: none; }
     #view, #settings-btn { flex: none; }
     #device { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: #3a2020; color: var(--bad); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto; }
@@ -29,8 +32,6 @@
     #track { display: flex; align-items: baseline; gap: 8px; min-width: 0; flex: 0 1 auto; overflow: hidden; white-space: nowrap; }
     #track .num { font: 600 20px Menlo, monospace; color: var(--accent); flex: none; }
     #track .name { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-    #track .strip { font-size: 11px; color: var(--dim); flex: none; }
-    #track .strip.none { color: var(--bad); }
     main { flex: 1; overflow: auto; padding: 8px 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; align-content: start; }
     section { background: #1d1d1d; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
     section h3 { margin: 0 0 4px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); }
@@ -54,7 +55,7 @@
     body { overflow: auto; }
     body.graphs.values main { flex: none; overflow: visible; } /* with graphs above, the whole window scrolls down to the values */
     body:not(.values) main { display: none; }
-    .graph { background: #1d1d1d; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; transition: border-color .3s; }
+    .graph { background: #1d1d1d; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; transition: border-color .4s, box-shadow .4s; }
     .graph.eq { grid-column: 1 / 7; grid-row: 1; }
     .graph.strip { grid-column: 1 / 3; grid-row: 2; }
     .graph.gate { grid-column: 3 / 5; grid-row: 2; }
@@ -94,6 +95,7 @@
     .live i { position: absolute; inset: 0; transform-origin: top; transform: scaleY(0); will-change: transform; }
     .graph.comp .live i { background: #ff9a5a; }
     .graph.gate .live i { background: #6fcf7f; }
+    .graph:not(.on) .live { opacity: .4; } /* section off: its meter greyed and empty */
     .graph.gate .live.closed i { background: #ff8080; }
     .live-text { position: absolute; width: 40px; margin-left: -17px; text-align: center; font: 10px Menlo, monospace; color: #ff9a5a; }
     .graph.gate .live-text { color: #6fcf7f; }
@@ -126,7 +128,7 @@
     .meter .led.on i { background: #6fcf7f; box-shadow: 0 0 6px #6fcf7f66; }
     .meter .led.on.warn i { background: #F7C449; box-shadow: 0 0 6px #F7C44966; }
     .meter .led.on.hot i { background: #ff5050; box-shadow: 0 0 6px #ff505066; }
-    .graph.hit { border-color: var(--accent); }
+    .graph.hit { border-color: rgba(var(--accent-rgb), .55); box-shadow: 0 0 12px rgba(var(--accent-rgb), .14); transition-duration: .06s; } /* the pane just touched: in fast, out slow */
     .graph h3 { margin: 0; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); display: flex; gap: 8px; }
     .graph h3 .title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
     .graph h3 .state { margin-left: auto; color: #555; flex: none; }
@@ -144,7 +146,7 @@
   </style>
 </head>
 <body>
-  <header><div id="track"><span class="num">–</span><span class="name">No track selected</span><span class="strip"></span></div><span id="device" hidden></span><span id="status">connecting…</span><div id="view" role="group" aria-label="View"><button type="button" data-view="values" title="Show or hide the strip's settings as a list">Values</button><button type="button" data-view="graphs" title="Show or hide the EQ, gate and compressor graphs">Graphs</button><button type="button" data-view="meters" title="Show or hide the input and output meters (with Graphs)">Meters</button></div><button type="button" id="settings-btn" title="Settings" aria-label="Settings"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></header>
+  <header><div id="track"><span class="num">–</span><span class="name">No track selected</span></div><span id="strip"></span><div class="right"><span id="device" hidden></span><span id="status">connecting…</span><div id="view" role="group" aria-label="View"><button type="button" data-view="values" title="Show or hide the strip's settings as a list">Values</button><button type="button" data-view="graphs" title="Show or hide the EQ, gate and compressor graphs">Graphs</button><button type="button" data-view="meters" title="Show or hide the input and output meters (with Graphs)">Meters</button></div><button type="button" id="settings-btn" title="Settings" aria-label="Settings"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div></header>
   <div id="graphs">
     <div class="graph eq" data-graph="eq"><h3><span class="title">EQ</span><span class="state"></span></h3><div class="detail"></div><div class="plot"><canvas></canvas></div><div class="none" hidden>No EQ on this strip</div></div>
     <div class="graph strip" data-graph="strip"><h3><span class="title">API Vision</span><span class="state"></span></h3><div class="sw-input" hidden></div><div class="sw-sections"></div><div class="none" hidden>No switches for this strip</div></div>

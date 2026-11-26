@@ -26,7 +26,7 @@ function render() {
   renderDevicePick(s);
   $('track').querySelector('.num').textContent = s.track ? String(s.track.number) : '–';
   $('track').querySelector('.name').textContent = s.track ? s.track.name : 'No track selected';
-  const strip = $('track').querySelector('.strip');
+  const strip = $('strip');
   strip.textContent = !s.track ? '' : s.stripName ?? 'no supported console strip';
   strip.classList.toggle('none', !!s.track && !s.hasStrip);
 
@@ -216,6 +216,7 @@ function graphCard(name, spec, emptyText) {
   state.textContent = spec ? (spec.on ? 'on' : 'off') : '';
   state.classList.toggle('on', !!spec?.on);
   card.classList.toggle('on', !!spec?.on);
+  queueLive(); // its live bar follows on/off at once
   const detail = card.querySelector('.detail');
   if (detail) detail.textContent = detail.title = spec?.detail ?? '';
   const readout = card.querySelector('.readout');
@@ -348,19 +349,23 @@ function drawLive() {
   }
   const { grDb, gateClosed } = c1.dynamicsReadout();
   const comp = document.querySelector('.graph.comp');
+  // A section that's off shows its bar empty and greyed: an off 2500 reports its G/R meter
+  // at full scale, which would read as maxed out.
   if (barGeom.comp) {
-    const gr = grDb ?? 0;
+    const on = comp.classList.contains('on');
+    const gr = on ? grDb ?? 0 : 0;
     comp.querySelector('.live i').style.transform = `scaleY(${Math.max(0, Math.min(1, gr / 20)).toFixed(3)})`;
-    setText(comp.querySelector('.live-text'), grDb === null ? '' : gr >= 0.5 ? `-${gr.toFixed(0)}` : '0');
+    setText(comp.querySelector('.live-text'), !on || grDb === null ? '' : gr >= 0.5 ? `-${gr.toFixed(0)}` : '0');
   }
   const gate = document.querySelector('.graph.gate');
   if (barGeom.gate) {
-    const closed = gateClosed ?? 0;
+    const on = gate.classList.contains('on');
+    const closed = on ? gateClosed ?? 0 : 0;
     const shut = closed > 0.5;
     gate.querySelector('.live i').style.transform = `scaleY(${Math.max(0, Math.min(1, closed)).toFixed(3)})`;
     gate.querySelector('.live').classList.toggle('closed', shut);
     gate.querySelector('.live-text').classList.toggle('closed', shut);
-    setText(gate.querySelector('.live-text'), gateClosed === null ? '' : shut ? 'closed' : 'open');
+    setText(gate.querySelector('.live-text'), !on || gateClosed === null ? '' : shut ? 'closed' : 'open');
   }
 }
 
