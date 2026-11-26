@@ -56,6 +56,10 @@ and meters mirroring LUNA.
   little high or low. Changes apply at once and are kept on this machine; **Reset to defaults**
   undoes them. Reinstalling resets them.
 - A knob turn is one undo step.
+- **Display On** brings the window back after you close it, and is lit while it shows. **Mode**
+  steps through the views: values, graphs, graphs with meters, everything.
+- The window's header shows the track's number and name on the left and, in the middle, the
+  strip in its console slot (in red, "no supported console strip", when there isn't one).
 - **Values** and **Graphs** (toggle buttons at the top right): show the list of the strip's
   settings, the graphs, or both. With only Graphs on, they fill the window (handy on a small
   screen beside the Console 1). One always stays on. The choice is kept on this machine. With
@@ -73,6 +77,7 @@ and meters mirroring LUNA.
     2500's threshold and ratio), with a bar showing the gain reduction now.
   - **Gate:** the 235's gate or expander curve from threshold and depth, with a bar showing
     whether it is open or closed.
+  - While the compressor or gate is switched off, its bar is greyed and empty.
   - **API Vision** (left of the gate): the strip's switches as buttons, lit when on and grey
     when off, named and stacked as on its own panel: Line Amp (gain, PAD, Ø, the 50 Hz cut)
     over Sweep Filter (SC, ON), and EQ Filter (PREDYN, TYPE, DYN SC) over Vision (SC LINK,
@@ -122,8 +127,10 @@ To update, open a newer `.lunaaddon`; it replaces the installed one.
 
 ## Not done yet
 
-- The **Low Mid Q, High Mid Q and Parallel Dry/Wet** controls do nothing (the API strip
-  has no natural target for them).
+- On the API Vision, the **Low Mid Q, High Mid Q and Parallel Dry/Wet** controls do nothing
+  (the strip has no natural target for them). On the 2500, Parallel Dry/Wet is its Mix.
+- The Console 1's EQ knobs drive the **550** only. With the strip's TYPE switched to the
+  **560** graphic EQ, the graph shows the 560 but its bands stay in LUNA.
 - Only the **API Vision** and **API 2500** are supported. Each strip is described in `STRIPS`
   in `logic.js` (which control drives which parameter, and its meters), so others can be added.
 - On the 2500, Gain, Knee, Thrust, Type, Link and Headroom stay in LUNA.
