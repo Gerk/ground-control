@@ -16,6 +16,10 @@ and meters mirroring LUNA.
   Output in LUNA and the Console 1 follows, with its number lit. Select Track 1–20 or Page −/+
   on the Console 1 and LUNA's selection follows. They count in LUNA's order; the hidden click
   and count-in tracks and cue buses are skipped.
+- **More than 20 tracks:** the buttons work in banks of 20 (1–20, 21–40, …), within the bank of
+  the selected track: on track 23, button 5 selects track 25 and button 3 is lit. Page −/+ steps
+  one track at a time across banks; selecting in LUNA reaches any track. The Console 1 can't
+  show which bank you're in, so the window shows the track's number and name.
 - **Drives the API Vision strip** on that track: Input Gain, High/Low Cut (215 filters), Filters
   to Compressor, Phase; Shape (235 gate); all four bands of the 550 EQ with shelf/bell; the 225
   compressor (Ratio, Attack, Release, Threshold, on/off); Drive and Character as Softube's own API
