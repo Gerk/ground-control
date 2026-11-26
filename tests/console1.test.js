@@ -364,7 +364,7 @@ describe('Console1', () => {
     add('threshold', { discrete: false, value: 0, real: 10, str: '10.0 dB', automatable: true });
     add('mix', { discrete: false, value: 1, real: 100, str: '100 %', automatable: true });
     stepped('ratio', ['1.5:1', '2:1', '3:1', '4:1', '6:1', '10:1', 'inf:1'], 3);
-    stepped('comp_in', ['Out', 'In'], 1);
+    stepped('power', ['Off', 'On'], 1);
     stepped('vu_meter', ['In', 'Out', 'GR'], 2);
     engine.addNode(`${base}/meters`);
     engine.addNode(`${base}/meters/vu_left`, { properties: { type: 'meter', level: [0.993], peak: [0], clip: [0], enabled: true, num_streams: 1 } });
@@ -380,8 +380,8 @@ describe('Console1', () => {
     await cc(engine, c, [[47, 127]]);                   // Threshold
     expect(param('threshold').normalized.value).toBeCloseTo(1);
     await c.releaseAll();
-    await cc(engine, c, [[46, 0]]);                     // Comp On flips Comp In
-    expect(param('comp_in').real.value).toBe(0);
+    await cc(engine, c, [[46, 0]]);                     // Comp On flips the 2500's Power
+    expect(param('power').real.value).toBe(0);
     await cc(engine, c, [[107, 90]]);                   // Input Gain: nothing on a 2500, ring back to 0
     expect(sentTo(engine, 107).at(-1)).toBe(0);
     await wait(Console1Logic.METER_MS + 20);

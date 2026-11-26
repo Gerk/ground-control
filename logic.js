@@ -154,7 +154,7 @@ const STRIPS = {
   [API_2500]: {
     name: 'API 2500',
     params: {
-      46: { id: 'comp_in', label: 'Comp In' },
+      46: { id: 'power', label: 'Power' },  // the yellow on/off button LUNA shows (comp_in isn't shown)
       49: 'ratio', 51: 'attack', 48: 'release',
       47: 'threshold',                       // clockwise = lower threshold, as on the plugin
       50: { id: 'mix', label: 'Mix' },

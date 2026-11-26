@@ -21,7 +21,8 @@ and meters mirroring LUNA.
   compressor (Ratio, Attack, Release, Threshold, on/off); Drive and Character as Softube's own API
   map uses them; plus the track's **Volume, Pan, Solo and Mute**.
 - **Drives the API 2500 Bus Compressor** when it's in a console slot (e.g. on the Main Output):
-  Comp On, Threshold, Ratio, Attack, Release, and **Parallel Dry/Wet** as its Mix. The Comp
+  Comp On (its yellow power button), Threshold, Ratio, Attack, Release, and **Parallel
+  Dry/Wet** as its Mix. The Comp
   meter follows the 2500's VU while it's switched to G/R, on the same marks as the plugin's
   G/R scale.
 - **Stereo tracks:** Pan moves where the stereo image is heard. Straight up is L100/R100 (full
