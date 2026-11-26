@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!-- Copyright 2026 Mark Guertin. Licensed under the Apache License, Version 2.0 (see LICENSE). -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ground Control</title>
+  <style>
+    :root { color-scheme: dark; --accent: #F7C449; --dim: #8a8a8a; --line: #2c2c2c; --bad: #ff8080; --ok: #6fcf7f; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #151515; color: #ddd; font: 13px/1.35 -apple-system, Helvetica, sans-serif; display: flex; flex-direction: column; height: 100vh; }
+    header { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #222; border-bottom: 1px solid #333; }
+    .title { font-weight: 600; }
+    #device { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: #2a2a2a; color: var(--dim); }
+    #device.ok { color: #000; background: var(--ok); }
+    #status { margin-left: auto; color: var(--dim); font-size: 12px; }
+    #track { padding: 12px; border-bottom: 1px solid var(--line); display: flex; align-items: baseline; gap: 10px; }
+    #track .num { font: 600 26px Menlo, monospace; color: var(--accent); min-width: 2ch; }
+    #track .name { font-size: 18px; font-weight: 600; }
+    #track .strip { margin-left: auto; font-size: 12px; color: var(--dim); }
+    #track .strip.none { color: var(--bad); }
+    main { flex: 1; overflow: auto; padding: 8px 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; align-content: start; }
+    section { background: #1d1d1d; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+    section h3 { margin: 0 0 4px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); }
+    .row { display: flex; justify-content: space-between; gap: 6px; padding: 2px 0; }
+    .row .v { font: 12px Menlo, monospace; color: var(--accent); white-space: nowrap; }
+    .row.na .v { color: #555; }
+    .row.hit { background: #2a2410; }
+    #tuning { border-top: 1px solid var(--line); padding: 6px 12px; }
+    #tuning summary { cursor: pointer; color: var(--dim); font-size: 12px; }
+    #tuning .grid { display: grid; grid-template-columns: auto 80px auto; gap: 4px 8px; align-items: center; margin: 6px 0 2px; }
+    #tuning input { width: 80px; background: #222; color: var(--accent); border: 1px solid #3a3a3a; border-radius: 4px; padding: 2px 4px; font: 12px Menlo, monospace; }
+    #tuning .unit { color: var(--dim); font-size: 11px; }
+    #tuning button { margin-top: 4px; background: #2a2a2a; color: #ddd; border: 1px solid #3a3a3a; border-radius: 4px; padding: 2px 10px; font-size: 12px; }
+    footer { padding: 6px 12px; border-top: 1px solid var(--line); color: var(--dim); font-size: 11px; font-family: Menlo, monospace; }
+  </style>
+</head>
+<body>
+  <header><span class="title">Ground Control</span><span id="device">not connected</span><span id="status">connecting…</span></header>
+  <div id="track"><span class="num">–</span><span class="name">No track selected</span><span class="strip"></span></div>
+  <main id="sections"></main>
+  <details id="tuning"><summary>Meter settings</summary><div class="grid" id="tuning-grid"></div><button id="tuning-reset">Reset to defaults</button></details>
+  <footer id="footer">Select a track in LUNA or on the Console 1.</footer>
+  <script src="vendor/luna.global.js"></script>
+  <script src="logic.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

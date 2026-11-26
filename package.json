@@ -1,0 +1,21 @@
+{
+  "name": "ground-control",
+  "private": true,
+  "license": "Apache-2.0",
+  "version": "0.5.0",
+  "type": "module",
+  "description": "Ground Control: a LUNA Add On for the Softube Console 1 Mk II, built with @uaudio/luna-builder-sdk",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "serve": "ua-builder serve",
+    "install-addon": "ua-builder install",
+    "pack": "ua-builder pack"
+  },
+  "devDependencies": {
+    "@uaudio/luna-builder-sdk": "file:./luna-builder-sdk",
+    "vite": "8.3.0",
+    "vitest": "5.0.1"
+  },
+  "repository": "github:Gerk/ground-control"
+}

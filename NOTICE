@@ -1,0 +1,14 @@
+Ground Control (LUNA Add On)
+Copyright 2026 Mark Guertin
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+project except in compliance with the License. A copy is in LICENSE, or at
+http://www.apache.org/licenses/LICENSE-2.0. Distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND.
+
+Includes the LUNA Builder SDK (vendor/luna.global.js), Copyright 2026 Universal Audio, Inc.,
+licensed under the Apache License, Version 2.0: see vendor/LICENSE and vendor/NOTICE.
+
+Ground Control is an independent project, not affiliated with or endorsed by Softube,
+Universal Audio or API. Softube and Console 1 are trademarks of Softube AB; LUNA and Apollo
+of Universal Audio, Inc.; API and API Vision of their owners.
