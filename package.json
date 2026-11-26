@@ -10,7 +10,7 @@
     "test:watch": "vitest",
     "serve": "ua-builder serve",
     "install-addon": "ua-builder install",
-    "pack": "ua-builder pack"
+    "pack": "sh scripts/pack.sh"
   },
   "devDependencies": {
     "@uaudio/luna-builder-sdk": "file:./luna-builder-sdk",

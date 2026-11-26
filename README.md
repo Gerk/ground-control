@@ -94,7 +94,7 @@ cd ground-control
 npm install
 npm test                          # runs against the SDK's mock engine; no LUNA needed
 npx ua-builder install            # link it into LUNA's Add Ons folder for live testing
-npx ua-builder pack --out Ground-Control.lunaaddon
+npm run pack                      # Ground-Control.lunaaddon, runtime files only
 ```
 
 ## License
