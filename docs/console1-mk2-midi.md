@@ -38,15 +38,15 @@ guesses, marked "?".
 
 | Section | CC | Kind | Likely role |
 |---|---|---|---|
-| Top row | 102 | button | ? (bound to "open editor") |
-| | 104 | button | ? (bound to "open instrument") |
+| Top row | 102 | button | Display On (measured on a Mk II, 2026-11-26: alternates 127 and 0 per press; the template bound it to "open editor") |
+| | 104 | button | Mode (measured on a Mk II, 2026-11-26: alternates 127 and 0 per press; the template bound it to "open instrument") |
 | | 97 / 96 | buttons | previous / next (bound to prev/next track) |
 | | 21–40 | 20 buttons | track select 1–20 |
 | | 17 | button | ? (far right) |
 | Input | 107 | knob | input gain |
 | | 105 | knob | filter (high/low cut ?) |
 | | 103 | knob | filter (high/low cut ?) |
-| | 61, 108, 58 | buttons | filter-to-compressor / phase / ? |
+| | 61, 108, 58 | buttons | Filters to Comp / Phase Inv. / Preset (58 measured on a Mk II, 2026-11-26: alternates 127 and 0 per press) |
 | Shape (gate) | 53 | button | Shape on |
 | | 54, 56, 55, 57 | knobs | gate, release, sustain, punch (order ?) |
 | | 59 | button | hard gate ? |

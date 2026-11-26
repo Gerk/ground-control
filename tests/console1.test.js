@@ -22,6 +22,10 @@ function addApiStrip(engine, base) {
   add('line_gain', 'Line Gain', { discrete: false, value: 0, real: 0, str: '0.0 dB', automatable: true });
   add('mic_gain', 'Mic Gain', { discrete: false, value: 0.429, real: 40.5, str: '40.5 dB', automatable: true });
   add('215_lp_filter', '215 LP Filter', { discrete: false, value: 1, real: 1, str: '40.8 k', automatable: true });
+  add('215_hp_filter', '215 HP Filter', { discrete: false, value: 0, real: 12, str: '12.0 Hz', automatable: true });
+  stepped('215_on', '215 On', ['Off', 'On']);
+  stepped('pad', 'Pad', ['Off', 'On']);
+  stepped('cut_filter', 'Cut Filter', ['Off', '50 Hz']);
   stepped('phase', 'Phase', ['Normal', 'Inverted']);
   stepped('eq_on', 'EQ On', ['Off', 'On']);
   stepped('550_lf_gain', '550 LF Gain', ['-12 dB', '-9 dB', '-6 dB', '-4 dB', '-2 dB', '0 dB', '2 dB', '4 dB', '6 dB', '9 dB', '12 dB'], 5);
@@ -199,6 +203,81 @@ describe('Console1', () => {
     await cc(engine, c, [[93, 63]]); // Low Cut/Bell/Shelf: Shelf -> Peak, LED shows "Bell"
     expect(engine.value(`${strip('Piano')}/550_lf_filter`, 'real_value')).toBe(1);
     expect(sentTo(engine, 93).at(-1)).toBe(63);
+  });
+
+  it('switches the 215 filters on when a cut knob leaves its end, and off when both are back', async () => {
+    const { engine, c, strip } = await setup();
+    const on = () => engine.value(`${strip('Piano')}/215_on`, 'real_value');
+    expect(on()).toBe(0);
+    await cc(engine, c, [[103, 40]]); // Low Cut up from 12 Hz
+    expect(on()).toBe(1);
+    await cc(engine, c, [[105, 90]]); // High Cut down too: stays on
+    expect(on()).toBe(1);
+    await cc(engine, c, [[103, 0]]); // Low Cut back; High Cut still in
+    expect(on()).toBe(1);
+    await cc(engine, c, [[105, 127]]); // both at rest: off
+    expect(on()).toBe(0);
+  });
+
+  it('flips a strip switch from the window, one touch each, and relights a Console 1 LED on it', async () => {
+    const { engine, c, strip } = await setup();
+    await c.toggleParam('pad');
+    await engine.settled();
+    expect(engine.value(`${strip('Piano')}/pad`, 'real_value')).toBe(1);
+    await c.toggleParam('pad');
+    await engine.settled();
+    expect(engine.value(`${strip('Piano')}/pad`, 'real_value')).toBe(0);
+    await c.toggleParam('phase'); // also the Console 1's Phase Inv. button
+    await settle(engine, c);
+    expect(engine.value(`${strip('Piano')}/phase`, 'real_value')).toBe(1);
+    expect(sentTo(engine, 108).at(-1)).toBe(127);
+    await c.toggleParam('no_such_switch'); // ignored
+  });
+
+  it('Mode asks the page for its next view, and only blinks', async () => {
+    const { engine, c, track } = await setup();
+    let presses = 0;
+    c.onMode = () => { presses++; };
+    await cc(engine, c, [[104, 127]]);
+    await cc(engine, c, [[104, 0]]);
+    expect(presses).toBe(2);
+    expect(c.track).toBe(track('Piano'));
+    await wait(200);
+    await settle(engine, c);
+    expect(sentTo(engine, 104).at(-1)).toBe(0); // put back off after the press
+  });
+
+  it('Display On asks the page to show or hide its window, and lights while it shows', async () => {
+    const { engine, c, track } = await setup();
+    let presses = 0;
+    c.onDisplay = () => { presses++; };
+    await cc(engine, c, [[102, 127]]);
+    await cc(engine, c, [[102, 0]]); // the unit alternates; each message is a press
+    expect(presses).toBe(2);
+    expect(c.track).toBe(track('Piano')); // nothing else moved
+    c.setDisplayLit(true);
+    await settle(engine, c);
+    expect(sentTo(engine, 102).at(-1)).toBe(127);
+    c.setDisplayLit(false);
+    await settle(engine, c);
+    expect(sentTo(engine, 102).at(-1)).toBe(0);
+    c.setDisplayLit(true);
+    await settle(engine, c);
+    await cc(engine, c, [[102, 0]]); // pressed while showing: the unit turns its LED off
+    await settle(engine, c);
+    expect(sentTo(engine, 102).at(-1)).toBe(127); // and it's put back on
+  });
+
+  it('Filters to Comp and Preset drive the strip\'s PAD and 50 Hz cut', async () => {
+    const { engine, c, strip } = await setup();
+    await cc(engine, c, [[61, 127]]);
+    expect(engine.value(`${strip('Piano')}/pad`, 'real_value')).toBe(1);
+    expect(sentTo(engine, 61).at(-1)).toBe(127);
+    await cc(engine, c, [[58, 127]]);
+    expect(engine.value(`${strip('Piano')}/cut_filter`, 'real_value')).toBe(1);
+    await cc(engine, c, [[58, 0]]);
+    expect(engine.value(`${strip('Piano')}/cut_filter`, 'real_value')).toBe(0);
+    expect(sentTo(engine, 58).at(-1)).toBe(0);
   });
 
   it('drives Input Gain to Line or Mic gain by the input switch', async () => {

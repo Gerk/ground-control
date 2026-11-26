@@ -20,10 +20,15 @@ and meters mirroring LUNA.
   the selected track: on track 23, button 5 selects track 25 and button 3 is lit. Page −/+ steps
   one track at a time across banks; selecting in LUNA reaches any track. The Console 1 can't
   show which bank you're in, so the window shows the track's number and name.
-- **Drives the API Vision strip** on that track: Input Gain, High/Low Cut (215 filters), Filters
-  to Compressor, Phase; Shape (235 gate); all four bands of the 550 EQ with shelf/bell; the 225
+- **Drives the API Vision strip** on that track: Input Gain, High/Low Cut (215 filters); the
+  three Input buttons as the strip's Line Amp buttons, which sit in the same order: **Filters to
+  Comp → PAD, Phase Inv. → Ø, Preset → the 50 Hz cut**; Shape (235 gate); all four bands of the 550 EQ with shelf/bell; the 225
   compressor (Ratio, Attack, Release, Threshold, on/off); Drive and Character as Softube's own API
   map uses them; plus the track's **Volume, Pan, Solo and Mute**.
+- **High/Low Cut switch the 215 filters on for you.** The strip's filters only act while its
+  215 section is on, and no Console 1 button drives that switch. Turning Low Cut up from 12 Hz
+  or High Cut down from 40.8 kHz switches the section on; turning both back to their ends
+  switches it off. Changes made in LUNA itself are left alone.
 - **Drives the API 2500 Bus Compressor** when it's in a console slot (e.g. on the Main Output):
   Comp On (its yellow power button), Threshold, Ratio, Attack, Release, and **Parallel
   Dry/Wet** as its Mix. The Comp
@@ -46,11 +51,48 @@ and meters mirroring LUNA.
   - Input, Comp and Shape move in steps, as the API strip's own LED meters do. The Comp and Shape
     rows show a single dot (all the hardware rows can draw). The Comp dot jumps to a peak at once
     and walks back toward 0 dB one LED at a time; the Shape dot jumps both ways.
-- **Meter settings** (bottom of the window): how fast the Comp and Shape dots fall back, how
+- **Meter settings** (the gear button at the top right, under Meters): how fast the Comp and Shape dots fall back, how
   often meters update, and a trim and LED aim for the Input/Output meters if your unit reads a
   little high or low. Changes apply at once and are kept on this machine; **Reset to defaults**
   undoes them. Reinstalling resets them.
 - A knob turn is one undo step.
+- **Values** and **Graphs** (toggle buttons at the top right): show the list of the strip's
+  settings, the graphs, or both. With only Graphs on, they fill the window (handy on a small
+  screen beside the Console 1). One always stays on. The choice is kept on this machine. With
+  Graphs off, no graph work runs at all.
+  - **EQ:** the response of the 550 bands (shelf or bell) or the 560 graphic EQ, with the 215
+    high and low cut filters. While EQ is off the curve still follows the knobs, greyed and
+    dashed, with what you hear (the filters alone) in blue.
+    The 550's band points are labelled LOW, LMID, HMID and HIGH.
+    The high and low cut corners are blue rings marked HP and LP (grey while the filters are
+    off); one outside 20 Hz–20 kHz sits at the edge with an arrow.
+  - **What you hear:** the preamp's 50 Hz cut is part of the curve. When the EQ or the filters
+    are sent to the compressor's sidechain only (DYN SC, the filters' SC), their shape is drawn
+    greyed and dashed (HP SC, LP SC) and what reaches the audio is drawn in blue.
+  - **Compressor:** output against input from the 225's threshold, ratio and knee (or the
+    2500's threshold and ratio), with a bar showing the gain reduction now.
+  - **Gate:** the 235's gate or expander curve from threshold and depth, with a bar showing
+    whether it is open or closed.
+  - **API Vision** (left of the gate): the strip's switches as buttons, lit when on and grey
+    when off, named and stacked as on its own panel: Line Amp (gain, PAD, Ø, the 50 Hz cut)
+    over Sweep Filter (SC, ON), and EQ Filter (PREDYN, TYPE, DYN SC) over Vision (SC LINK,
+    POWER). EQ ON is left to the Console 1's EQ button and the EQ card.
+    **Click a button to flip that switch in LUNA** (one undo step each): these are the switches
+    the Console 1 can't reach. One the Console 1 also has (EQ ON, SC LINK, Ø) relights its LED.
+  - The gate and compressor cards also show release (and the gate's Release/Hold).
+  - **Meters:** **In** on the left is the API strip's own five input VU LEDs (−12, −6, 0, +8,
+    +18), lit exactly as the strip reports them: one LED per step and nothing below the first,
+    like the strip itself and the Console 1's input LEDs. **Out** on the right is the channel's
+    meter, left and right, smooth, on the Console 1's scale (+6 to −60) with a short peak hold.
+    The **Meters** button turns them off (greyed and empty, layout unchanged, no level updates);
+    it's greyed while Graphs is off.
+  - The graph for the section you're turning on the Console 1 is outlined.
+  - Light on resources: the curves redraw only when a setting changes, and the meters and
+    gain-reduction/gate bars are moved with CSS transforms, at most once per screen frame and
+    not at all while the window is hidden.
+  - They're drawn from the settings, not measured. API's EQs use "proportional Q" (a band
+    narrows as its gain rises), which is approximated, so the EQ curve is close rather than
+    exact. The compressor and gate curves use the strip's own dB scale.
 
 ## Requirements
 
@@ -66,21 +108,21 @@ and meters mirroring LUNA.
 
 1. Download `Ground-Control.lunaaddon` from [Releases](../../releases).
 2. Double-click it, or open it from LUNA. LUNA asks to add it; click **Add**.
-3. Open it from **Add Ons → Windows**. It is an ordinary window, so LUNA's other windows can
-   cover it. After that it opens with your session and keeps running while its window is
-   hidden or closed.
+3. Open it from **Add Ons → Windows**. It floats above LUNA's windows. After that it opens with your session and keeps running while its window is
+   hidden or closed. The Console 1's **Display On** button brings it back after you close it, and is lit
+   while it shows. **Mode** steps through the views: values, graphs, graphs with meters, everything.
 
 **Quit Softube's Console 1 software** (On-Screen Display) first: while it runs it takes over the
 unit. The Console 1 shows up in LUNA as the MIDI device **"Console 1"**; plugging it in later is
 fine. If you renamed it (in Audio MIDI Setup), Ground Control still finds a device whose name
-contains "Console 1"; otherwise pick it from the **device menu** at the top of the window. The
+contains "Console 1"; otherwise pick it in **Settings** (the gear button at the top right). The
 choice is kept on this machine.
 
 To update, open a newer `.lunaaddon`; it replaces the installed one.
 
 ## Not done yet
 
-- The **Low Mid Q, High Mid Q, Parallel Dry/Wet and Preset** controls do nothing (the API strip
+- The **Low Mid Q, High Mid Q and Parallel Dry/Wet** controls do nothing (the API strip
   has no natural target for them).
 - Only the **API Vision** and **API 2500** are supported. Each strip is described in `STRIPS`
   in `logic.js` (which control drives which parameter, and its meters), so others can be added.
@@ -96,7 +138,10 @@ An Add On is a web page LUNA hosts; it talks to LUNA's engine through Universal 
   drives on each supported strip (`STRIPS`), the meter scales, and the `Console1` class
   that follows the selected track, writes controls (each turn a touch gesture, so one undo step)
   and sends values back to the Console 1 for rings, LEDs and meters.
-- `main.js` and `index.html` are the window: status, the strip's current values, Meter settings.
+- `graphs.js` draws the graphs: `GraphLogic` turns a strip's settings into EQ, compressor and
+  gate curves (tested on its own), `GraphView` draws them on canvases.
+- `main.js` and `index.html` are the window: status, the strip's current values, the graphs,
+  and the Settings dialog (device and meter settings).
 - The Console 1's MIDI map, meters and LED behaviour: [docs/console1-mk2-midi.md](docs/console1-mk2-midi.md).
 - LUNA's track meter is a meter scale, not amplitude: from −18 dBFS up, dB = 33 × (level − 1);
   below that it bends to 0 at about −60 (`LEVEL_DB_TABLE`, measured with a 1 kHz tone). The API

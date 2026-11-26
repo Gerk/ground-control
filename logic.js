@@ -10,9 +10,12 @@
 const C1_DEVICE = 'Console 1'; // the unit's own MIDI name; renamed units are picked in the window
 const API_STRIP = 'uaudio_api_vision_ext';
 const GESTURE_IDLE_MS = 400;
+const AUTO_REST_EPS = 0.5 / 127; // a knob within half a CC step of its rest counts as at rest
 const TRACK_BUTTON_FIRST = 21; // Select Track 1..20 = CC21..40
 const PAGE_MINUS = 97;
 const PAGE_PLUS = 96;
+const MODE = 104;       // the Mode button (measured on a Mk II, 2026-11-26: alternates 127 and 0 per press)
+const DISPLAY_ON = 102; // the Display On button (measured on a Mk II, 2026-11-26: alternates 127 and 0 per press)
 const METER_IN = [110, 111];   // input meter L/R
 const METER_OUT = [112, 113];  // output meter L/R
 const METER_MS = 25;           // at most 40 meter updates a second
@@ -78,6 +81,7 @@ const LAYOUT = [
   { cc: 103, section: 'Input', label: 'Low Cut', kind: 'knob' },
   { cc: 61, section: 'Input', label: 'Filters to Comp', kind: 'toggle' },
   { cc: 108, section: 'Input', label: 'Phase Inv.', kind: 'toggle' },
+  { cc: 58, section: 'Input', label: 'Preset', kind: 'toggle' },
   { cc: 53, section: 'Shape', label: 'Shape On', kind: 'toggle' },
   { cc: 54, section: 'Shape', label: 'Gate', kind: 'knob' },
   { cc: 56, section: 'Shape', label: 'Gate Release', kind: 'knob' },
@@ -123,6 +127,9 @@ const LAYOUT = [
  *                                  meter face; `mode` { param, real }: only while that switch
  *                                  is in that position (else the row rests on 0 dB)
  *     shape: { node }               0 = open (0 dB, middle LED) .. 1 = closed (far left)
+ *   autoSwitches: [{ switch, knobs: { id: rest } }]   a section switch the Console 1's knobs
+ *           drive: turning any of `knobs` off its rest position (normalized) switches it on,
+ *           all back at rest switches it off. Only Console 1 turns do this, not edits in LUNA.
  * Add LUNA's other strips here once measured.
  */
 const API_2500 = 'uaudio_api_2500_ext';
@@ -131,7 +138,11 @@ const STRIPS = {
     name: 'API Vision',
     params: {
       107: (s) => (Console1Logic.isMic(s) ? 'mic_gain' : 'line_gain'),
-      105: '215_lp_filter', 103: '215_hp_filter', 61: '215_sc', 108: 'phase',
+      // The Input buttons sit where the strip's Line Amp buttons do: PAD, Ø, the 50 Hz cut.
+      // (Filters to SC stays in the window's API Vision pane.)
+      105: '215_lp_filter', 103: '215_hp_filter', 108: 'phase',
+      61: { id: 'pad', label: 'Pad (Filters to Comp)' },
+      58: { id: 'cut_filter', label: '50 Hz Cut (Preset)' },
       53: '235_on', 54: '235_thresh', 56: '235_release', 55: '235_depth', 57: '235_attack', 59: '235_g_e',
       80: 'eq_on', 92: '550_lf_freq', 91: '550_lf_gain', 89: '550_lmf_freq', 88: '550_lmf_gain',
       86: '550_hmf_freq', 85: '550_hmf_gain', 83: '550_hf_freq', 82: '550_hf_gain',
@@ -143,6 +154,9 @@ const STRIPS = {
       14: { id: 'eq_predyn', label: 'Order (EQ Pre-Dyn)' },
       17: { id: 'sc_link', label: 'Ext. Sidechain (SC Link)' },
     },
+    // The 215 filters only act while the 215 section is on, which no Console 1 button drives:
+    // Low Cut and High Cut switch it on when moved off their ends (12 Hz, 40.8 kHz).
+    autoSwitches: [{ switch: '215_on', knobs: { '215_hp_filter': 0, '215_lp_filter': 1 } }],
     meters: {
       input: { node: 'input_meter', dbSpan: 30 },
       // The 225's five gain-reduction LEDs. Full scale (1.0) is the plugin's 12 dB, between the 10
@@ -172,6 +186,9 @@ const STRIPS = {
     },
   },
 };
+
+/** The API Vision's compress_meter full scale (1.0) in dB of gain reduction (the 225's 12 dB LED). */
+const GR_FULL_SCALE_DB = 12;
 
 /** Comp row LED for a gain reduction in dB, by the Console 1's printed marks (0 dB = LED 10). */
 const GR_LEDS = [[0, 10], [3, 7], [6, 5], [10, 3], [20, 0]];
@@ -460,10 +477,13 @@ function stereoPan(main) {
  *   c1.dispose();
  */
 class Console1 {
-  constructor(luna, session, { onChange = () => {}, out = null, deviceName = null } = {}) {
+  constructor(luna, session, { onChange = () => {}, onDisplay = () => {}, onMode = () => {}, out = null, deviceName = null } = {}) {
     this.luna = luna;
     this.session = session;
     this.onChange = onChange;
+    this.onDisplay = onDisplay; // Display On pressed: the page shows or hides its window
+    this.onMode = onMode;       // Mode pressed: the page steps to its next view
+    this.displayLit = null;     // Display On's LED: whether the window is showing (null = never told)
     this.deviceName = deviceName || null; // chosen in the window; null = automatic
     this.out = out ?? new Luna.SendMidi(luna);
     this.device = null;
@@ -609,6 +629,12 @@ class Console1 {
       const index = this.track ? this.tracks().indexOf(this.track) : -1;
       const bank = index >= 0 ? Console1Logic.bankOf(index).bank : 0;
       this.selectIndex(bank * 20 + (cc - TRACK_BUTTON_FIRST));
+    } else if (cc === MODE) {
+      this.onMode(); // every message is a press
+      setTimeout(() => this.send(MODE, 0), 150); // momentary: a blink, never left lit
+    } else if (cc === DISPLAY_ON) {
+      this.onDisplay(); // every message is a press (the unit alternates 127 and 0 itself)
+      if (this.displayLit !== null) this.send(DISPLAY_ON, this.displayLit ? 127 : 0); // the unit flips its own LED: put it back
     } else if (cc === PAGE_MINUS || cc === PAGE_PLUS) {
       const index = this.track ? this.tracks().indexOf(this.track) : -1;
       this.selectIndex(index + (cc === PAGE_PLUS ? 1 : -1));
@@ -669,12 +695,48 @@ class Console1 {
         w.pending = null;
         try {
           await (view === 'real' ? w.control.real.set(value) : w.control.normalized.set(value));
+          await this.autoSwitch(w.control);
         } catch (e) {
           console.warn('Console 1: write refused', w.control.path, e);
         }
       }
     } finally {
       w.busy = false;
+    }
+  }
+
+  /**
+   * Flip one of the followed strip's switches by its parameter id (the window's strip buttons):
+   * one touch-bracketed write, so one undo step. Console 1 LEDs on that switch follow.
+   */
+  async toggleParam(id) {
+    const control = this.slot?.params.find((c) => c.id === id);
+    if (!control) return;
+    const reals = control.realValues.value;
+    const on = Console1Logic.isOn(control);
+    try {
+      if (Array.isArray(reals) && reals.length >= 2) await control.real.set(on ? reals[0] : reals[1]);
+      else await control.normalized.set(on ? 0 : 1);
+    } catch (e) {
+      console.warn('Console 1: switch refused', id, e);
+    }
+    for (const entry of LAYOUT) if (this.controlFor(entry) === control) this.sendFeedback(entry);
+  }
+
+  /** After a Console 1 turn: switch a section on or off by its knobs (STRIPS `autoSwitches`). */
+  async autoSwitch(control) {
+    for (const rule of this.strip?.autoSwitches ?? []) {
+      if (!(control.id in rule.knobs)) continue;
+      const sw = this.slot?.params.find((c) => c.id === rule.switch);
+      if (!sw) continue;
+      const active = Object.entries(rule.knobs).some(([id, rest]) => {
+        const v = this.slot.params.find((c) => c.id === id)?.normalized.value;
+        return typeof v === 'number' && Math.abs(v - rest) > AUTO_REST_EPS;
+      });
+      if (active === Console1Logic.isOn(sw)) continue;
+      const reals = sw.realValues.value;
+      if (Array.isArray(reals) && reals.length >= 2) await sw.real.set(active ? reals[1] : reals[0]);
+      else await sw.normalized.set(active ? 1 : 0);
     }
   }
 
@@ -817,6 +879,55 @@ class Console1 {
     this.send(cc, v);
   }
 
+  /**
+   * The Meter objects the window can watch (null without a track): `roles` picks some of
+   * out, input, comp, shape; all when omitted.
+   */
+  meterWatchList(roles = null) {
+    if (!this.meterSources) return null;
+    return Object.entries(this.meterSources).filter(([role]) => !roles || roles.includes(role)).map(([, m]) => m);
+  }
+
+  /**
+   * How many of the API strip's five input VU LEDs (-12, -6, 0, +8, +18) are lit, 0..5, from its
+   * input meter (one LED per 0.2); null when the strip has no input meter.
+   */
+  inputLeds() {
+    const m = this.meterSources?.input;
+    if (!m) return null;
+    const levels = m.level.value ?? [];
+    const top = levels.length ? Math.max(...levels) : 0;
+    return Math.max(0, Math.min(5, Math.round(top * 5)));
+  }
+
+  /** Output level in dBFS for the window's OUT meter, [left, right] (-Infinity for silence). */
+  levelsDb() {
+    const m = this.meterSources?.out;
+    if (!m) return { output: null };
+    const l = m.level.value ?? [];
+    return { output: [l[0], l[1] ?? l[0]].map((v) => (v > 0 ? Console1Logic.levelDb(v) : -Infinity)) };
+  }
+
+
+  /**
+   * Live dynamics for the window's graphs: the compressor's gain reduction in dB and how closed
+   * the gate is (0 open .. 1 closed), each null when the strip doesn't report it.
+   */
+  dynamicsReadout() {
+    const s = this.meterSources ?? {};
+    const spec = this.meterProfile?.meters ?? {};
+    const first = (m) => m?.level.value?.[0] ?? 0;
+    let grDb = null;
+    if (s.comp && spec.comp) {
+      const sw = spec.comp.mode && this.slot?.params.find((c) => c.id === spec.comp.mode.param);
+      if (spec.comp.mode && (!sw || sw.real.value !== spec.comp.mode.real)) grDb = null;
+      else if (spec.comp.gr) grDb = lerpTable([...spec.comp.gr].sort((a, b) => a[0] - b[0]).map(([l, d]) => [l, d / 20]), first(s.comp)) * 20;
+      else grDb = Math.max(0, Math.min(1, first(s.comp))) * GR_FULL_SCALE_DB;
+    }
+    const gateClosed = s.shape ? Math.max(0, Math.min(1, first(s.shape))) : null;
+    return { grDb, gateClosed };
+  }
+
   // ---------- feedback to the Console 1 ----------
 
   send(cc, value) {
@@ -848,6 +959,14 @@ class Console1 {
   sendAll() {
     this.sendTrackLeds();
     for (const entry of LAYOUT) this.sendFeedback(entry);
+    if (this.displayLit !== null) this.send(DISPLAY_ON, this.displayLit ? 127 : 0);
+    this.send(MODE, 0);
+  }
+
+  /** Light Display On while the window shows. */
+  setDisplayLit(on) {
+    this.displayLit = !!on;
+    this.send(DISPLAY_ON, on ? 127 : 0);
   }
 
   /** For the page: the followed track and every layout entry with its current value. */
