@@ -12,13 +12,18 @@ and meters mirroring LUNA.
 
 ## What it does
 
-- **Follows the selected track, both ways.** Select a track in LUNA and the Console 1 follows,
-  with that track's number lit. Select Track 1–20 or Page −/+ on the Console 1 and LUNA's
-  selection follows. LUNA's hidden click and count-in tracks are skipped.
+- **Follows the selected track or bus, both ways.** Select a track, an aux bus or the Main
+  Output in LUNA and the Console 1 follows, with its number lit. Select Track 1–20 or Page −/+
+  on the Console 1 and LUNA's selection follows. They count in LUNA's order; the hidden click
+  and count-in tracks and cue buses are skipped.
 - **Drives the API Vision strip** on that track: Input Gain, High/Low Cut (215 filters), Filters
   to Compressor, Phase; Shape (235 gate); all four bands of the 550 EQ with shelf/bell; the 225
   compressor (Ratio, Attack, Release, Threshold, on/off); Drive and Character as Softube's own API
   map uses them; plus the track's **Volume, Pan, Solo and Mute**.
+- **Drives the API 2500 Bus Compressor** when it's in a console slot (e.g. on the Main Output):
+  Comp On, Threshold, Ratio, Attack, Release, and **Parallel Dry/Wet** as its Mix. The Comp
+  meter follows the 2500's VU while it's switched to G/R, on the same marks as the plugin's
+  G/R scale.
 - **Stereo tracks:** Pan moves where the stereo image is heard. Straight up is L100/R100 (full
   width); turning right brings the left side across while the right stays at 100R, and turning
   left does the mirror. The movement follows LUNA's measured pan curve, so the image moves
@@ -49,8 +54,8 @@ and meters mirroring LUNA.
 - **Softube's Console 1 software must not be running** (the On-Screen Display / Console 1 app).
   While it runs it takes over the unit, and Ground Control gets nothing from it. Quit it, and
   turn off its start-at-login if you have it set.
-- Tracks with LUNA's **API Vision** console strip. On other tracks only Volume, Pan, Solo and Mute
-  respond.
+- Tracks or buses with LUNA's **API Vision** or **API 2500** in the console slot. Elsewhere only
+  Volume, Pan, Solo and Mute respond.
 
 ## Install
 
@@ -71,8 +76,9 @@ To update, open a newer `.lunaaddon`; it replaces the installed one.
 
 - The **Low Mid Q, High Mid Q, Parallel Dry/Wet and Preset** controls do nothing (the API strip
   has no natural target for them).
-- Only the **API Vision** strip is supported, not LUNA's other console strips. Meter and control
-  details are kept per strip (`STRIPS` and `LAYOUT` in `logic.js`) so others can be added.
+- Only the **API Vision** and **API 2500** are supported. Each strip is described in `STRIPS`
+  in `logic.js` (which control drives which parameter, and its meters), so others can be added.
+- On the 2500, Gain, Knee, Thrust, Type, Link and Headroom stay in LUNA.
 - The EQ frequency knobs follow API's own step order, so turning clockwise lowers the frequency.
 
 ## How it works
@@ -80,8 +86,8 @@ To update, open a newer `.lunaaddon`; it replaces the installed one.
 An Add On is a web page LUNA hosts; it talks to LUNA's engine through Universal Audio's
 [LUNA Builder SDK](https://github.com/uaudio-labs/luna-builder-sdk).
 
-- `logic.js` has everything except the page: the control layout (`LAYOUT`, one row per Console 1
-  control: CC → API parameter id or track control), the meter scales, and the `Console1` class
+- `logic.js` has everything except the page: the Console 1's controls (`LAYOUT`), what each
+  drives on each supported strip (`STRIPS`), the meter scales, and the `Console1` class
   that follows the selected track, writes controls (each turn a touch gesture, so one undo step)
   and sends values back to the Console 1 for rings, LEDs and meters.
 - `main.js` and `index.html` are the window: status, the strip's current values, Meter settings.

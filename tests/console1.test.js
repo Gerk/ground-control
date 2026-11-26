@@ -147,17 +147,19 @@ describe('Console1', () => {
     const { engine, c, select } = await setup();
     expect(c.track.name.value).toBe('Piano');
     expect(c.slot).not.toBe(null);
-    expect(sentTo(engine, 21).at(-1)).toBe(127); // track 1 lit
+    // Buttons count channels in LUNA's order; the mock puts Main Output first: Main, Piano, Organ, Bass.
+    expect(c.tracks().map((ch) => ch.name.value)).toEqual(['Main Output', 'Piano', 'Organ', 'Bass']);
+    expect(sentTo(engine, 22).at(-1)).toBe(127); // Piano is button 2
     await select('Organ');
     await settle(engine, c);
     expect(c.track.name.value).toBe('Organ');
-    expect(sentTo(engine, 22).at(-1)).toBe(127);
-    expect(sentTo(engine, 21).at(-1)).toBe(0);
+    expect(sentTo(engine, 23).at(-1)).toBe(127);
+    expect(sentTo(engine, 22).at(-1)).toBe(0);
   });
 
   it('selects tracks from the track buttons and Page -/+', async () => {
     const { engine, session, c } = await setup();
-    await cc(engine, c, [[23, 127]]); // Select Track 3
+    await cc(engine, c, [[24, 127]]); // Select Track 4 (Main Output is 1)
     expect(session.context.selectionTracks.value).toEqual([session.tracksInOrder[2].id]);
     expect(c.track.name.value).toBe('Bass');
     await cc(engine, c, [[97, 127]]); // Page - : previous track
@@ -304,7 +306,7 @@ describe('Console1', () => {
     const { engine, c, track } = await setup();
     engine.setValue(track('Organ').path, 'track_type', 'click'); // Organ stands in for CLICK
     await settle(engine, c);
-    await cc(engine, c, [[22, 127]]); // Select Track 2 is now Bass
+    await cc(engine, c, [[23, 127]]); // Select Track 3 is now Bass (Main Output, Piano, Bass)
     expect(c.track.name.value).toBe('Bass');
   });
 
@@ -324,6 +326,75 @@ describe('Console1', () => {
     await settle(engine, c);
     await wait(Console1Logic.METER_MS + 20);
     expect(sentTo(engine, 112).at(-1)).toBe(0);
+  });
+
+  it('follows a selected bus, drives its strip, and skips the cue buses', async () => {
+    const { engine, session, c } = await setup();
+    engine.addBus('abc', 'lesl', { name: 'Leslie', busType: 'aux', stemFormat: 'stereo' });
+    for (let i = 0; i < 20 && !session.buses.byId('lesl'); i++) { await engine.settled(); await wait(10); }
+    const bus = session.buses.byId('lesl');
+    engine.addNode(`${bus.path}/effects/console`, { properties: { uid: 'console_lesl', insert_type: 'console', plugin_id: API, plugin_name: 'API Vision Channel Strip', external_sdk_instance_id: 9, plugin_error: null } });
+    engine.addNode(`${bus.path}/effects/console/controls`);
+    addApiStrip(engine, `${bus.path}/effects/console/controls`);
+    await engine.settled();
+    expect(c.tracks().map((ch) => ch.name.value)).toEqual(['Main Output', 'Piano', 'Organ', 'Bass', 'Leslie']);
+    engine.setValue(session.context.path, 'last_selected_track', 'lesl');
+    engine.setValue(session.context.path, 'selection_tracks', ['lesl']);
+    await settle(engine, c);
+    expect(c.track.name.value).toBe('Leslie');
+    expect(c.snapshot().stripName).toBe('API Vision');
+    expect(sentTo(engine, 25).at(-1)).toBe(127);      // button 5
+    await cc(engine, c, [[47, 127]]);                   // Threshold on the bus's strip
+    expect(c.slot.params.find((p) => p.id === '225_thresh').normalized.value).toBeCloseTo(1);
+  });
+
+  it('drives an API 2500 on the Main Output: comp controls, Mix, and its G/R meter', async () => {
+    const { engine, session, c } = await setup();
+    engine.addPlugin(Console1Logic.API_2500, { name: 'API 2500 Bus Compressor' });
+    const base = `${session.master.path}/effects/console`;
+    engine.addNode(base, { properties: { uid: 'console_master', insert_type: 'console', plugin_id: Console1Logic.API_2500, plugin_name: 'API 2500 Bus Compressor', external_sdk_instance_id: 8, plugin_error: null } });
+    engine.addNode(`${base}/controls`);
+    const add = (id, o) => { engine.addControl(`${base}/controls/${id}`, 'parameter', o); engine.setValue(`${base}/controls/${id}`, 'name', id); };
+    const stepped = (id, strs, index) => {
+      add(id, { discrete: true, value: index, real: index, str: strs[index], automatable: true, normalized: index / (strs.length - 1) });
+      engine.setValue(`${base}/controls/${id}`, 'num_steps', strs.length);
+      engine.setValue(`${base}/controls/${id}`, 'real_values', strs.map((_, i) => i));
+      engine.setValue(`${base}/controls/${id}`, 'string_values', strs);
+    };
+    add('threshold', { discrete: false, value: 0, real: 10, str: '10.0 dB', automatable: true });
+    add('mix', { discrete: false, value: 1, real: 100, str: '100 %', automatable: true });
+    stepped('ratio', ['1.5:1', '2:1', '3:1', '4:1', '6:1', '10:1', 'inf:1'], 3);
+    stepped('comp_in', ['Out', 'In'], 1);
+    stepped('vu_meter', ['In', 'Out', 'GR'], 2);
+    engine.addNode(`${base}/meters`);
+    engine.addNode(`${base}/meters/vu_left`, { properties: { type: 'meter', level: [0.993], peak: [0], clip: [0], enabled: true, num_streams: 1 } });
+    await engine.settled();
+    engine.setValue(session.context.path, 'last_selected_track', session.master.id);
+    engine.setValue(session.context.path, 'selection_tracks', [session.master.id]);
+    await settle(engine, c);
+    expect(c.track.name.value).toBe('Main Output');
+    expect(c.snapshot().stripName).toBe('API 2500');
+    const param = (id) => c.slot.params.find((p) => p.id === id);
+    await cc(engine, c, [[50, 0]]);                     // Parallel Dry/Wet = Mix
+    expect(param('mix').normalized.value).toBeCloseTo(0);
+    await cc(engine, c, [[47, 127]]);                   // Threshold
+    expect(param('threshold').normalized.value).toBeCloseTo(1);
+    await c.releaseAll();
+    await cc(engine, c, [[46, 0]]);                     // Comp On flips Comp In
+    expect(param('comp_in').real.value).toBe(0);
+    await cc(engine, c, [[107, 90]]);                   // Input Gain: nothing on a 2500, ring back to 0
+    expect(sentTo(engine, 107).at(-1)).toBe(0);
+    await wait(Console1Logic.METER_MS + 20);
+    expect(sentTo(engine, 115).at(-1)).toBe(Console1Logic.rowCc(10)); // no gain reduction
+    engine.setValue(`${base}/meters/vu_left`, 'level', [0.456]);       // needle on G/R 6
+    await settle(engine, c);
+    await wait(Console1Logic.METER_MS + 20);
+    expect(sentTo(engine, 115).at(-1)).toBe(Console1Logic.rowCc(5));  // the "6" mark
+    engine.setValue(`${base}/controls/vu_meter`, 'real_value', 0);     // VU switched to In: no G/R
+    engine.setValue(`${base}/controls/vu_meter`, 'value', 0);
+    await settle(engine, c);
+    await wait(Console1Logic.METER_MS + Console1Logic.ROW_STEP_MS * 8);
+    expect(sentTo(engine, 115).at(-1)).toBe(Console1Logic.rowCc(10));
   });
 
   it('drives Input, Comp and Shape from the API strip meters', async () => {

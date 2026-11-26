@@ -27,7 +27,7 @@ function render() {
   $('track').querySelector('.num').textContent = s.track ? String(s.track.number) : '–';
   $('track').querySelector('.name').textContent = s.track ? s.track.name : 'No track selected';
   const strip = $('track').querySelector('.strip');
-  strip.textContent = !s.track ? '' : s.hasStrip ? 'API Vision' : 'no API Vision strip';
+  strip.textContent = !s.track ? '' : s.stripName ?? 'no supported console strip';
   strip.classList.toggle('none', !!s.track && !s.hasStrip);
 
   const bySection = new Map();

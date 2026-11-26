@@ -66,48 +66,45 @@ const COMP_REST_LED = 10;                      // 0 dB: no gain reduction
 const SHAPE_REST_LED = 5;                      // 0 dB: gate open
 
 /**
- * The layout. `param` is an API Vision parameter id (a function picks one from the strip), or
- * `track` names a track control. `kind`: knob (absolute value), toggle (press flips a switch),
- * tristate (the Console 1's three-position buttons, used here as two-position switches; `leds`
- * gives the value lighting each state: [off, on]).
+ * The Console 1's controls. Each row is one control: `cc`, where it sits (`section`), its
+ * `kind` and, for track-level controls, `track` (gain, pan, solo, mute on the followed
+ * channel). What a strip control drives is up to the strip: see STRIPS. `kind`: knob (absolute
+ * value), toggle (press flips a switch), tristate (the Console 1's three-position buttons, used
+ * as two-position switches; `leds` gives the value lighting each state: [off, on]).
  */
 const LAYOUT = [
-  // Input
-  { cc: 107, section: 'Input', label: 'Input Gain', kind: 'knob', param: (s) => (Console1Logic.isMic(s) ? 'mic_gain' : 'line_gain') },
-  { cc: 105, section: 'Input', label: 'High Cut', kind: 'knob', param: '215_lp_filter' },
-  { cc: 103, section: 'Input', label: 'Low Cut', kind: 'knob', param: '215_hp_filter' },
-  { cc: 61, section: 'Input', label: 'Filters to Comp', kind: 'toggle', param: '215_sc' },
-  { cc: 108, section: 'Input', label: 'Phase Inv.', kind: 'toggle', param: 'phase' },
-  // Shape -> 235 gate
-  { cc: 53, section: 'Shape', label: 'Shape On', kind: 'toggle', param: '235_on' },
-  { cc: 54, section: 'Shape', label: 'Gate', kind: 'knob', param: '235_thresh' },
-  { cc: 56, section: 'Shape', label: 'Gate Release', kind: 'knob', param: '235_release' },
-  { cc: 55, section: 'Shape', label: 'Sustain', kind: 'knob', param: '235_depth' },
-  { cc: 57, section: 'Shape', label: 'Punch', kind: 'knob', param: '235_attack' },
-  { cc: 59, section: 'Shape', label: 'Hard Gate', kind: 'toggle', param: '235_g_e' },
-  // EQ -> 550
-  { cc: 80, section: 'EQ', label: 'EQ On', kind: 'toggle', param: 'eq_on' },
-  { cc: 92, section: 'EQ', label: 'Low Freq', kind: 'knob', param: '550_lf_freq' },
-  { cc: 91, section: 'EQ', label: 'Low Gain', kind: 'knob', param: '550_lf_gain' },
-  { cc: 89, section: 'EQ', label: 'Low Mid Freq', kind: 'knob', param: '550_lmf_freq' },
-  { cc: 88, section: 'EQ', label: 'Low Mid Gain', kind: 'knob', param: '550_lmf_gain' },
-  { cc: 86, section: 'EQ', label: 'High Mid Freq', kind: 'knob', param: '550_hmf_freq' },
-  { cc: 85, section: 'EQ', label: 'High Mid Gain', kind: 'knob', param: '550_hmf_gain' },
-  { cc: 83, section: 'EQ', label: 'High Freq', kind: 'knob', param: '550_hf_freq' },
-  { cc: 82, section: 'EQ', label: 'High Gain', kind: 'knob', param: '550_hf_gain' },
-  { cc: 93, section: 'EQ', label: 'Low Shelf/Bell', kind: 'tristate', param: '550_lf_filter', leds: [127, 63] },
-  { cc: 65, section: 'EQ', label: 'High Shelf/Bell', kind: 'tristate', param: '550_hf_filter', leds: [127, 63] },
-  // Compressor -> 225
-  { cc: 46, section: 'Comp', label: 'Comp On', kind: 'toggle', param: '225_on' },
-  { cc: 49, section: 'Comp', label: 'Ratio', kind: 'knob', param: '225_ratio' },
-  { cc: 51, section: 'Comp', label: 'Attack', kind: 'knob', param: '225_attack' },
-  { cc: 48, section: 'Comp', label: 'Release', kind: 'knob', param: '225_release' },
-  { cc: 47, section: 'Comp', label: 'Threshold', kind: 'knob', param: '225_thresh' },
-  // Output (Drive/Character as Softube's own API Vision map uses them)
-  { cc: 15, section: 'Output', label: 'Drive (225 Type)', kind: 'knob', param: '225_type' },
-  { cc: 18, section: 'Output', label: 'Character (225 Knee)', kind: 'knob', param: '225_knee' },
-  { cc: 14, section: 'Output', label: 'Order (EQ Pre-Dyn)', kind: 'tristate', param: 'eq_predyn', leds: [63, 0] },
-  { cc: 17, section: 'Output', label: 'Ext. Sidechain (SC Link)', kind: 'tristate', param: 'sc_link', leds: [127, 63] },
+  { cc: 107, section: 'Input', label: 'Input Gain', kind: 'knob' },
+  { cc: 105, section: 'Input', label: 'High Cut', kind: 'knob' },
+  { cc: 103, section: 'Input', label: 'Low Cut', kind: 'knob' },
+  { cc: 61, section: 'Input', label: 'Filters to Comp', kind: 'toggle' },
+  { cc: 108, section: 'Input', label: 'Phase Inv.', kind: 'toggle' },
+  { cc: 53, section: 'Shape', label: 'Shape On', kind: 'toggle' },
+  { cc: 54, section: 'Shape', label: 'Gate', kind: 'knob' },
+  { cc: 56, section: 'Shape', label: 'Gate Release', kind: 'knob' },
+  { cc: 55, section: 'Shape', label: 'Sustain', kind: 'knob' },
+  { cc: 57, section: 'Shape', label: 'Punch', kind: 'knob' },
+  { cc: 59, section: 'Shape', label: 'Hard Gate', kind: 'toggle' },
+  { cc: 80, section: 'EQ', label: 'EQ On', kind: 'toggle' },
+  { cc: 92, section: 'EQ', label: 'Low Freq', kind: 'knob' },
+  { cc: 91, section: 'EQ', label: 'Low Gain', kind: 'knob' },
+  { cc: 89, section: 'EQ', label: 'Low Mid Freq', kind: 'knob' },
+  { cc: 88, section: 'EQ', label: 'Low Mid Gain', kind: 'knob' },
+  { cc: 86, section: 'EQ', label: 'High Mid Freq', kind: 'knob' },
+  { cc: 85, section: 'EQ', label: 'High Mid Gain', kind: 'knob' },
+  { cc: 83, section: 'EQ', label: 'High Freq', kind: 'knob' },
+  { cc: 82, section: 'EQ', label: 'High Gain', kind: 'knob' },
+  { cc: 93, section: 'EQ', label: 'Low Shelf/Bell', kind: 'tristate', leds: [127, 63] },
+  { cc: 65, section: 'EQ', label: 'High Shelf/Bell', kind: 'tristate', leds: [127, 63] },
+  { cc: 46, section: 'Comp', label: 'Comp On', kind: 'toggle' },
+  { cc: 49, section: 'Comp', label: 'Ratio', kind: 'knob' },
+  { cc: 51, section: 'Comp', label: 'Attack', kind: 'knob' },
+  { cc: 48, section: 'Comp', label: 'Release', kind: 'knob' },
+  { cc: 47, section: 'Comp', label: 'Threshold', kind: 'knob' },
+  { cc: 50, section: 'Comp', label: 'Parallel Dry/Wet', kind: 'knob' },
+  { cc: 15, section: 'Output', label: 'Drive', kind: 'knob' },
+  { cc: 18, section: 'Output', label: 'Character', kind: 'knob' },
+  { cc: 14, section: 'Output', label: 'Order', kind: 'tristate', leds: [63, 0] },
+  { cc: 17, section: 'Output', label: 'Ext. Sidechain', kind: 'tristate', leds: [127, 63] },
   { cc: 7, section: 'Output', label: 'Volume', kind: 'knob', track: 'gain' },
   { cc: 10, section: 'Output', label: 'Pan', kind: 'knob', track: 'pan' },
   { cc: 13, section: 'Output', label: 'Solo', kind: 'toggle', track: 'solo' },
@@ -115,17 +112,37 @@ const LAYOUT = [
 ];
 
 /**
- * Per-strip meter profiles, keyed by the console slot's plugin id. Each strip names its meter
- * nodes under `<track>/effects/console/meters` and how their levels read; a strip without an
- * entry gets no Input/Comp/Shape metering. Add LUNA's other strips (Neve, SSL ...) here once
- * measured: their meters may use other names, step sizes and ranges.
- *   input: { node, dbSpan }   level 1.0 = 0 dBFS, dB = dbSpan * (level - 1)
- *   comp:  { node, leds }     [level, LED] pairs onto the Comp row (LED 10 = 0 dB, 0 = -20)
- *   shape: { node }           0 = open (0 dB, middle LED) .. 1 = closed (far left)
+ * The console strips Ground Control knows, keyed by the console slot's plugin id. A strip
+ * without an entry gets only the channel's Volume, Pan, Solo and Mute.
+ *   params: { cc: id | (slot) => id | { id, label } }   what each Console 1 control drives;
+ *           `label` replaces the layout's in the window. Controls not listed do nothing.
+ *   meters: Input/Comp/Shape sources under the slot's `meters/` node:
+ *     input: { node, dbSpan }       level 1.0 = 0 dBFS, dB = dbSpan * (level - 1)
+ *     comp:  { node, leds }         [level, LED] pairs onto the Comp row (LED 10 = 0 dB), or
+ *            { node, gr, mode }     [level, gain reduction dB] pairs read off the plugin's
+ *                                  meter face; `mode` { param, real }: only while that switch
+ *                                  is in that position (else the row rests on 0 dB)
+ *     shape: { node }               0 = open (0 dB, middle LED) .. 1 = closed (far left)
+ * Add LUNA's other strips here once measured.
  */
+const API_2500 = 'uaudio_api_2500_ext';
 const STRIPS = {
   [API_STRIP]: {
     name: 'API Vision',
+    params: {
+      107: (s) => (Console1Logic.isMic(s) ? 'mic_gain' : 'line_gain'),
+      105: '215_lp_filter', 103: '215_hp_filter', 61: '215_sc', 108: 'phase',
+      53: '235_on', 54: '235_thresh', 56: '235_release', 55: '235_depth', 57: '235_attack', 59: '235_g_e',
+      80: 'eq_on', 92: '550_lf_freq', 91: '550_lf_gain', 89: '550_lmf_freq', 88: '550_lmf_gain',
+      86: '550_hmf_freq', 85: '550_hmf_gain', 83: '550_hf_freq', 82: '550_hf_gain',
+      93: '550_lf_filter', 65: '550_hf_filter',
+      46: '225_on', 49: '225_ratio', 51: '225_attack', 48: '225_release', 47: '225_thresh',
+      // Drive/Character/Order/Ext. Sidechain as Softube's own API Vision map uses them.
+      15: { id: '225_type', label: 'Drive (225 Type)' },
+      18: { id: '225_knee', label: 'Character (225 Knee)' },
+      14: { id: 'eq_predyn', label: 'Order (EQ Pre-Dyn)' },
+      17: { id: 'sc_link', label: 'Ext. Sidechain (SC Link)' },
+    },
     meters: {
       input: { node: 'input_meter', dbSpan: 30 },
       // The 225's five gain-reduction LEDs. Full scale (1.0) is the plugin's 12 dB, between the 10
@@ -134,7 +151,30 @@ const STRIPS = {
       shape: { node: 'expand_meter' },
     },
   },
+  [API_2500]: {
+    name: 'API 2500',
+    params: {
+      46: { id: 'comp_in', label: 'Comp In' },
+      49: 'ratio', 51: 'attack', 48: 'release',
+      47: 'threshold',                       // clockwise = lower threshold, as on the plugin
+      50: { id: 'mix', label: 'Mix' },
+    },
+    meters: {
+      // The VU in G/R mode. Its needle moves linearly with the level (0 = far left, about 1 =
+      // right end); the G/R marks are not evenly spaced. Measured with a steady 1 kHz tone,
+      // reading the needle against the G/R scale at each threshold step.
+      comp: {
+        node: 'vu_left',
+        mode: { param: 'vu_meter', real: 2 },
+        gr: [[0, 20], [0.051, 15], [0.121, 11], [0.19, 10], [0.243, 9], [0.295, 8], [0.349, 7],
+          [0.402, 6.5], [0.456, 6], [0.511, 5.7], [0.623, 5], [0.68, 4.5], [0.734, 4], [0.85, 2], [0.993, 0]],
+      },
+    },
+  },
 };
+
+/** Comp row LED for a gain reduction in dB, by the Console 1's printed marks (0 dB = LED 10). */
+const GR_LEDS = [[0, 10], [3, 7], [6, 5], [10, 3], [20, 0]];
 
 /**
  * Heard centre of a stereo channel when one side moves across and the other stays at its edge:
@@ -197,6 +237,8 @@ const Console1Logic = {
   STRIPS,
   C1_DEVICE,
   API_STRIP,
+  API_2500,
+  GR_LEDS,
   LAYOUT,
   GESTURE_IDLE_MS,
   TUNING_FIELDS,
@@ -315,6 +357,33 @@ const Console1Logic = {
     return led === 0 ? 0 : Math.round((led - 0.5) * (127 / (ROW_LEDS - 1)));
   },
 
+  /** Comp row LED for a gain reduction in dB, along the Console 1's printed marks. */
+  grLed(db) {
+    return Math.round(lerpTable(GR_LEDS.map(([d, k]) => [d / 20, k / 10]), Math.max(0, Math.min(20, db)) / 20) * 10);
+  },
+
+  /** Comp row LED for a meter read through a [level, dB] table (a plugin's G/R meter face). */
+  grTableLed(level, table) {
+    const t = [...table].sort((a, b) => a[0] - b[0]);
+    const v = Math.max(t[0][0], Math.min(t.at(-1)[0], level ?? t.at(-1)[0]));
+    for (let i = 1; i < t.length; i++) {
+      if (v <= t[i][0]) {
+        const [l0, d0] = t[i - 1], [l1, d1] = t[i];
+        return Console1Logic.grLed(d0 + ((v - l0) / (l1 - l0 || 1)) * (d1 - d0));
+      }
+    }
+    return COMP_REST_LED;
+  },
+
+  /** What a strip's spec for a layout entry names: { id, label } (id may depend on the slot). */
+  paramSpec(strip, entry, slot) {
+    const spec = strip?.params?.[entry.cc];
+    if (spec === undefined || spec === null) return null;
+    if (typeof spec === 'function') return { id: spec(slot), label: entry.label };
+    if (typeof spec === 'string') return { id: spec, label: entry.label };
+    return { id: spec.id, label: spec.label ?? entry.label };
+  },
+
   /** The Comp meter's LED for the strip's compress_meter level (0 = no gain reduction). */
   compLed(level, leds = STRIPS[API_STRIP].meters.comp.leds) {
     const v = Math.max(0, Math.min(1, level ?? 0));
@@ -399,7 +468,8 @@ class Console1 {
     this.out = out ?? new Luna.SendMidi(luna);
     this.device = null;
     this.track = null;      // the followed Luna.Track
-    this.slot = null;       // its API Vision slot, or null
+    this.slot = null;       // its console strip slot (a strip in STRIPS), or null
+    this.strip = null;      // that strip's STRIPS entry
     this.pan = null;        // stereoPan() for a stereo track, else null (track.pan is used)
     this.unsubs = [];
     this.trackUnsubs = [];
@@ -419,9 +489,21 @@ class Console1 {
     this.binding = Promise.resolve();
   }
 
-  /** The tracks the buttons count, in LUNA's order: without the system click and count-in tracks. */
+  /**
+   * The channels the buttons count, in LUNA's order: tracks, aux buses (folders included) and the
+   * Main Output, without LUNA's system click and count-in tracks and its hidden cue buses.
+   */
   tracks() {
-    return this.session.visibleTracks;
+    return this.session.channelsInOrder.filter((ch) => {
+      if ('busType' in ch) return !String(ch.busType.value ?? '').startsWith('cue');
+      return !['click', 'count_in'].includes(ch.trackType?.value ?? '');
+    });
+  }
+
+  /** The channel selected in LUNA: its last selected track or bus, else the focused track. */
+  selectedChannel() {
+    const uid = this.session.context.lastSelectedTrack.value;
+    return (uid && this.tracks().find((ch) => ch.id === uid)) || (this.session.focusedTrack.value ?? null);
   }
 
   async start() {
@@ -433,7 +515,9 @@ class Console1 {
     this.findDevice();
     this.unsubs.push(this.luna.midiDevices.onChange(() => this.findDevice()));
     this.unsubs.push(this.session.focusedTrack.onChange(() => this.follow()));
+    this.unsubs.push(this.session.context.lastSelectedTrack.onChange(() => this.follow()));
     this.unsubs.push(this.session.tracks.onChange(() => this.sendTrackLeds()));
+    this.unsubs.push(this.session.buses.onChange(() => { this.sendTrackLeds(); this.follow(); }));
     await this.follow();
   }
 
@@ -466,7 +550,7 @@ class Console1 {
 
   /** Follow LUNA's selected track (serialized, so quick switches settle on the last one). */
   follow() {
-    this.binding = this.binding.then(() => this.bind(this.session.focusedTrack.value ?? null)).catch((e) => console.warn('Console 1: follow failed', e));
+    this.binding = this.binding.then(() => this.bind(this.selectedChannel())).catch((e) => console.warn('Console 1: follow failed', e));
     return this.binding;
   }
 
@@ -478,15 +562,17 @@ class Console1 {
     this.trackUnsubs = [];
     this.track = track;
     this.slot = null;
+    this.strip = null;
     this.pan = null;
     if (track) {
       await Promise.all([track.loadStrip(), track.controls.load(), track.effects.load()]);
-      const slot = track.effects.items.find((s) => s.id === 'console' && s.pluginId.value === API_STRIP) ?? null;
+      const slot = track.effects.items.find((s) => s.id === 'console' && STRIPS[s.pluginId.value]) ?? null;
       if (slot) await slot.controls.load();
       if (this.track !== track) return; // switched again meanwhile
       this.slot = slot;
+      this.strip = slot ? STRIPS[slot.pluginId.value] : null;
       if (track.main.stereo) this.pan = stereoPan(track.main);
-      // Re-bind when the console slot changes plugin (API Vision added or removed).
+      // Re-bind when the console slot changes plugin (a strip added, removed or swapped).
       const consoleSlot = track.effects.items.find((s) => s.id === 'console');
       if (consoleSlot) this.trackUnsubs.push(consoleSlot.pluginId.onChange(() => { this.track = null; this.follow(); }));
       for (const entry of LAYOUT) {
@@ -510,10 +596,11 @@ class Console1 {
   controlFor(entry) {
     if (!this.track) return undefined;
     if (entry.track === 'pan' && this.pan) return this.pan;
-    if (entry.track) return this.track[entry.track];
+    if (entry.track === 'solo') return this.track.controls.byId?.('solo') ? this.track.controls.get('solo') : undefined; // buses have it too
+    if (entry.track) { try { return this.track[entry.track]; } catch { return undefined; } }
     if (!this.slot) return undefined;
-    const id = typeof entry.param === 'function' ? entry.param(this.slot) : entry.param;
-    return this.slot.params.find((c) => c.id === id);
+    const spec = Console1Logic.paramSpec(this.strip, entry, this.slot);
+    return spec ? this.slot.params.find((c) => c.id === spec.id) : undefined;
   }
 
   handleCC(cc, value) {
@@ -621,7 +708,7 @@ class Console1 {
    */
   watchMeter(track) {
     const sources = { out: track.meter };
-    const profile = this.slot ? STRIPS[this.slot.pluginId.value] : null;
+    const profile = this.strip;
     for (const [role, spec] of Object.entries(profile?.meters ?? {})) {
       const m = new Luna.Meter(this.luna, `${this.slot.path}/meters/${spec.node}`);
       sources[role] = m;
@@ -633,6 +720,10 @@ class Console1 {
       if (!this.meterTimer) this.meterTimer = setTimeout(() => { this.meterTimer = null; this.updateMeters(); }, tuning.meterMs);
     };
     for (const m of Object.values(sources)) this.meterStops.push(m.onChange(schedule));
+    // A meter read only in one switch position (the 2500's VU in G/R) follows the switch.
+    const mode = profile?.meters?.comp?.mode;
+    const modeParam = mode && this.slot.params.find((c) => c.id === mode.param);
+    if (modeParam) this.meterStops.push(modeParam.real.onChange(schedule));
     // Keep the meters lit between LUNA's pushes (a steady level sends none, and the Shape and
     // Comp rows always show a dot).
     this.meterRefresh = setInterval(() => {
@@ -676,9 +767,19 @@ class Console1 {
     const spec = this.meterProfile?.meters ?? {};
     const first = (m) => m?.level.value?.[0];
     return [
-      [METER_COMP, s.comp ? Console1Logic.compLed(first(s.comp), spec.comp.leds) : COMP_REST_LED],
+      [METER_COMP, this.compTarget(s.comp, spec.comp, first)],
       [METER_SHAPE, s.shape ? Console1Logic.shapeLed(first(s.shape)) : SHAPE_REST_LED],
     ];
+  }
+
+  /** The Comp row's LED for the strip's comp meter: a level table, or a G/R face in its mode. */
+  compTarget(meter, spec, first) {
+    if (!meter || !spec) return COMP_REST_LED;
+    if (spec.mode) {
+      const sw = this.slot?.params.find((c) => c.id === spec.mode.param);
+      if (!sw || sw.real.value !== spec.mode.real) return COMP_REST_LED;
+    }
+    return spec.gr ? Console1Logic.grTableLed(first(meter), spec.gr) : Console1Logic.compLed(first(meter), spec.leds);
   }
 
   updateMeters() {
@@ -760,9 +861,11 @@ class Console1 {
       deviceNames: this.deviceNames(),
       track: this.track ? { name: this.track.name.value ?? this.track.id, number: index + 1 } : null,
       hasStrip: !!this.slot,
+      stripName: this.strip?.name ?? null,
       entries: LAYOUT.map((e) => {
         const c = this.controlFor(e);
-        return { ...e, display: c ? (c.display.value ?? '') : null, cc: c ? (e.kind === 'knob' ? Console1Logic.ccFor(c) : Console1Logic.isOn(c) ? 'on' : 'off') : null };
+        const label = Console1Logic.paramSpec(this.strip, e, this.slot)?.label ?? e.label;
+        return { ...e, label, display: c ? (c.display.value ?? '') : null, cc: c ? (e.kind === 'knob' ? Console1Logic.ccFor(c) : Console1Logic.isOn(c) ? 'on' : 'off') : null };
       }),
       lastCc: this.lastCc,
     };
