@@ -56,7 +56,9 @@ and meters mirroring LUNA.
 
 **Quit Softube's Console 1 software** (On-Screen Display) first: while it runs it takes over the
 unit. The Console 1 shows up in LUNA as the MIDI device **"Console 1"**; plugging it in later is
-fine.
+fine. If you renamed it (in Audio MIDI Setup), Ground Control still finds a device whose name
+contains "Console 1"; otherwise pick it from the **device menu** at the top of the window. The
+choice is kept on this machine.
 
 To update, open a newer `.lunaaddon`; it replaces the installed one.
 

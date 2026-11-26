@@ -268,6 +268,30 @@ describe('Console1', () => {
     }
   });
 
+  it('finds a renamed unit: by a name containing "Console 1", or the one chosen', async () => {
+    const { engine, c } = await setup({ c1: false });
+    engine.addMidiDevice('Desk', { uid: 'desk' });
+    await settle(engine, c);
+    expect(c.device).toBe(null);                          // nothing called Console 1
+    expect(c.deviceNames()).toContain('Desk');
+    c.setDeviceName('Desk');                              // chosen in the window
+    await settle(engine, c);
+    expect(c.device?.name.value).toBe('Desk');
+    expect(c.snapshot().deviceMissing).toBe(false);
+    engine.receiveMidi('Desk', [[0xb0, 7, 127]]);        // it drives the track
+    await settle(engine, c);
+    expect(c.track.gain.normalized.value).toBeCloseTo(1);
+    c.setDeviceName('Gone');                              // chosen one missing: automatic, flagged
+    await settle(engine, c);
+    expect(c.device).toBe(null);
+    expect(c.snapshot().deviceMissing).toBe(true);
+    engine.addMidiDevice('Console 1 Mk II', { uid: 'c1b' }); // automatic: name contains Console 1
+    await settle(engine, c);
+    expect(c.device?.name.value).toBe('Console 1 Mk II');
+    c.setDeviceName(null);
+    expect(c.snapshot().deviceMissing).toBe(false);
+  });
+
   it('waits quietly without a Console 1 and picks it up when it appears', async () => {
     const { engine, c } = await setup({ c1: false });
     expect(c.device).toBe(null);

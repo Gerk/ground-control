@@ -2,6 +2,7 @@
 
 | Version | Changes |
 |---|---|
+| 0.5.1 | Works with a renamed Console 1: automatically finds a device whose name contains "Console 1", and a **device menu** in the window picks any MIDI device (saved on this machine). |
 | 0.5.0 | Renamed **Ground Control** (was "Console 1"). Same features; installs as a new Add On, so remove the old one. |
 | 0.4.6 | Stereo Pan moves the heard centre of the image, from full width; nothing can get stuck. |
 | 0.4.5 | Stereo pan keeps its spread: fast turns or switching tracks no longer fold the track to mono. |

@@ -7,7 +7,7 @@
 // back to the Console 1 so its LED rings and buttons show LUNA's state, and its 20 track buttons
 // light the selected track. CC numbers: docs/console1-mk2-midi.md.
 
-const C1_DEVICE = 'Console 1';
+const C1_DEVICE = 'Console 1'; // the unit's own MIDI name; renamed units are picked in the window
 const API_STRIP = 'uaudio_api_vision_ext';
 const GESTURE_IDLE_MS = 400;
 const TRACK_BUTTON_FIRST = 21; // Select Track 1..20 = CC21..40
@@ -163,6 +163,19 @@ function lerpTable(table, v, inverse = false) {
 
 const Console1Logic = {
   HEARD_CENTRE,
+
+  /**
+   * The MIDI device to use: the one named `chosen` if it is there, else one named "Console 1",
+   * else one whose name contains "console 1" (any case). Only devices LUNA can read from count.
+   */
+  pickDevice(devices, chosen = null) {
+    const usable = devices.filter((d) => d.inputPort);
+    const named = (n) => usable.find((d) => d.name.value === n);
+    return (chosen && named(chosen))
+      ?? named(C1_DEVICE)
+      ?? usable.find((d) => (d.name.value ?? '').toLowerCase().includes(C1_DEVICE.toLowerCase()))
+      ?? null;
+  },
 
   /** Stereo pan knob (0..1, 0.5 = straight up) to LUNA's { l, r } normalized pans. */
   stereoPans(k) {
@@ -378,10 +391,11 @@ function stereoPan(main) {
  *   c1.dispose();
  */
 class Console1 {
-  constructor(luna, session, { onChange = () => {}, out = null } = {}) {
+  constructor(luna, session, { onChange = () => {}, out = null, deviceName = null } = {}) {
     this.luna = luna;
     this.session = session;
     this.onChange = onChange;
+    this.deviceName = deviceName || null; // chosen in the window; null = automatic
     this.out = out ?? new Luna.SendMidi(luna);
     this.device = null;
     this.track = null;      // the followed Luna.Track
@@ -424,7 +438,7 @@ class Console1 {
   }
 
   findDevice() {
-    const device = this.luna.midiDevices.items.find((d) => d.name.value === C1_DEVICE && d.inputPort) ?? null;
+    const device = Console1Logic.pickDevice(this.luna.midiDevices.items, this.deviceName);
     if (device === this.device) return;
     this.midiStop?.();
     this.midiStop = null;
@@ -436,6 +450,18 @@ class Console1 {
       this.sendAll();
     }
     this.onChange();
+  }
+
+  /** Use the MIDI device with this name (null or '' = automatic). */
+  setDeviceName(name) {
+    this.deviceName = name || null;
+    this.findDevice();
+    this.onChange();
+  }
+
+  /** Names of the MIDI devices LUNA can read from, for the window's device menu. */
+  deviceNames() {
+    return this.luna.midiDevices.items.filter((d) => d.inputPort).map((d) => d.name.value).filter(Boolean);
   }
 
   /** Follow LUNA's selected track (serialized, so quick switches settle on the last one). */
@@ -728,6 +754,10 @@ class Console1 {
     const index = this.track ? this.tracks().indexOf(this.track) : -1;
     return {
       connected: !!this.device,
+      deviceName: this.device?.name.value ?? null,
+      deviceChoice: this.deviceName,
+      deviceMissing: !!this.deviceName && this.device?.name.value !== this.deviceName,
+      deviceNames: this.deviceNames(),
       track: this.track ? { name: this.track.name.value ?? this.track.id, number: index + 1 } : null,
       hasStrip: !!this.slot,
       entries: LAYOUT.map((e) => {

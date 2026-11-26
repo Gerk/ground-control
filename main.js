@@ -19,8 +19,11 @@ function queueRender() {
 function render() {
   if (!c1) return;
   const s = c1.snapshot();
-  $('device').textContent = s.connected ? 'Console 1 connected' : 'Console 1 not found';
-  $('device').classList.toggle('ok', s.connected);
+  $('device').textContent = s.deviceMissing
+    ? `"${s.deviceChoice}" not found${s.connected ? `, using "${s.deviceName}"` : ''}`
+    : s.connected ? `${s.deviceName} connected` : 'Console 1 not found';
+  $('device').classList.toggle('ok', s.connected && !s.deviceMissing);
+  renderDevicePick(s);
   $('track').querySelector('.num').textContent = s.track ? String(s.track.number) : '–';
   $('track').querySelector('.name').textContent = s.track ? s.track.name : 'No track selected';
   const strip = $('track').querySelector('.strip');
@@ -48,6 +51,29 @@ function render() {
   if (s.lastCc) $('footer').textContent = `CC${s.lastCc.cc} = ${s.lastCc.value}${s.lastCc.entry ? ` · ${s.lastCc.entry.label}` : ''}`;
 }
 
+// ---------- device menu (saved on this machine) ----------
+
+const DEVICE_KEY = 'com.markguertin.groundcontrol.device';
+const savedDevice = () => { try { return localStorage.getItem(DEVICE_KEY) || null; } catch { return null; } };
+let pickKey = '';
+
+/** Rebuild the device menu only when the list or the choice changed (it would close while open). */
+function renderDevicePick(s) {
+  const names = [...new Set([...(s.deviceChoice ? [s.deviceChoice] : []), ...s.deviceNames])];
+  const key = JSON.stringify([s.deviceChoice, names]);
+  if (key === pickKey) return;
+  pickKey = key;
+  const pick = $('device-pick');
+  pick.replaceChildren(new Option('Automatic ("Console 1")', ''), ...names.map((n) => new Option(n, n)));
+  pick.value = s.deviceChoice ?? '';
+}
+
+$('device-pick').addEventListener('change', (e) => {
+  const name = e.target.value;
+  try { if (name) localStorage.setItem(DEVICE_KEY, name); else localStorage.removeItem(DEVICE_KEY); } catch {}
+  c1?.setDeviceName(name);
+});
+
 async function bindSession() {
   c1?.dispose();
   c1 = null;
@@ -55,7 +81,7 @@ async function bindSession() {
   if (!session) { status('no session open'); return; }
   await session.ready();
   status(session.name.value ?? session.uid);
-  c1 = new Console1(luna, session, { onChange: () => {
+  c1 = new Console1(luna, session, { deviceName: savedDevice(), onChange: () => {
     queueRender();
     clearTimeout(hitTimer);
     hitTimer = setTimeout(() => { if (c1) { c1.lastCc = c1.lastCc && { ...c1.lastCc, cc: -1 }; queueRender(); } }, 600);
