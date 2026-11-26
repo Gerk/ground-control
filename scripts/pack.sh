@@ -5,7 +5,7 @@
 set -e
 cd "$(dirname "$0")/.."
 rm -rf build && mkdir -p "build/Ground Control/vendor"
-cp index.html logic.js main.js manifest.json LICENSE NOTICE README.md "build/Ground Control/"
+cp index.html logic.js main.js manifest.json icon.png LICENSE NOTICE README.md "build/Ground Control/"
 cp vendor/luna.global.js vendor/LICENSE vendor/NOTICE "build/Ground Control/vendor/"
 npx ua-builder pack "build/Ground Control" --no-vendor --out Ground-Control.lunaaddon
 rm -rf build

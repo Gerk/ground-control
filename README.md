@@ -1,3 +1,5 @@
+<img src="icon.png" width="128" alt="Ground Control icon" align="right">
+
 # Ground Control
 
 A [LUNA](https://www.uaudio.com/luna) Add On that turns a **Softube Console 1 Mk II** into a
