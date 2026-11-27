@@ -2,7 +2,7 @@
     "package_name": "Ground Control",
     "id": "com.markguertin.groundcontrol",
     "title": "Ground Control",
-    "version": "0.8.0",
+    "version": "0.8.1",
     "manufacturer": "Mark Guertin",
     "description": "Control LUNA's API Vision channel strip and API 2500 from a Softube Console 1 Mk II: follows the selected track or bus, with LED, ring and meter feedback, and EQ, compressor and gate graphs.",
     "categories": [

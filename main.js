@@ -248,8 +248,16 @@ function drawGraphs() {
   const st = GraphLogic.stateFor(slot?.pluginId.value, (id) => slot?.params.find((c) => c.id === id));
   const eq = graphCard('eq', st.eq, 'No EQ on this strip');
   if (st.eq) {
-    const bands = st.eq.mode === '550' ? st.eq.bands.map((b) => `${b.f >= 1000 ? `${b.f / 1000}k` : b.f} ${b.g > 0 ? '+' : ''}${b.g}`).join(' · ') : '';
-    eq.querySelector('.detail').textContent = [bands, st.eq.filtersNote].filter(Boolean).join(' · ');
+    // Frequencies grey, gains gold (`.val`), as the other panes' values.
+    const parts = st.eq.mode === '550'
+      ? st.eq.bands.map((b) => [`${b.f >= 1000 ? `${b.f / 1000}k` : b.f} `, `${b.g > 0 ? '+' : ''}${b.g}`])
+      : [];
+    if (st.eq.filtersNote) parts.push([st.eq.filtersNote, null]);
+    const detail = eq.querySelector('.detail');
+    detail.replaceChildren(...parts.flatMap(([text, gain], i) => [
+      ...(i ? [' · '] : []), text,
+      ...(gain === null ? [] : [Object.assign(document.createElement('span'), { className: 'val', textContent: gain })]),
+    ]));
     GraphView.drawEq(eq.querySelector('canvas'), st.eq);
   }
   const gate = graphCard('gate', st.gate, 'No gate on this strip');

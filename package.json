@@ -2,7 +2,7 @@
   "name": "ground-control",
   "private": true,
   "license": "Apache-2.0",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "type": "module",
   "description": "Ground Control: a LUNA Add On for the Softube Console 1 Mk II, built with @uaudio/luna-builder-sdk",
   "scripts": {

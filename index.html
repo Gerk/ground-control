@@ -29,7 +29,7 @@
     #settings select { width: 100%; background: #2a2a2a; color: #ddd; border: 1px solid #3a3a3a; border-radius: 4px; font-size: 12px; padding: 3px 4px; }
     .btn { background: #3a3a3a; color: #ddd; border: 1px solid #111; border-radius: 4px; padding: 3px 10px; font: 700 11px -apple-system, Helvetica, sans-serif; letter-spacing: .04em; text-transform: uppercase; cursor: pointer; }
     .btn:hover { background: #474747; }
-    #track { display: flex; align-items: baseline; gap: 8px; min-width: 0; flex: 0 1 auto; overflow: hidden; white-space: nowrap; }
+    #track { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 0 1 auto; overflow: hidden; white-space: nowrap; }
     #track .num { font: 600 20px Menlo, monospace; color: var(--accent); flex: none; }
     #track .name { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
     main { flex: 1; overflow: auto; padding: 8px 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; align-content: start; }
@@ -48,7 +48,7 @@
     #view button:hover { background: #474747; color: #eee; }
     #view button[aria-pressed="true"] { background: #4a4a4a; color: var(--accent); }
     #view button:disabled { background: #2e2e2e; color: #5a5a5a; cursor: default; }
-    #graphs { display: none; grid-template-columns: repeat(6, 1fr) 46px; grid-template-rows: minmax(120px, 1.2fr) minmax(max-content, 1fr); /* the bottom row grows to fit the strip buttons */ gap: 10px; padding: 8px 12px; min-height: 0; }
+    #graphs { display: none; grid-template-columns: repeat(6, 1fr) 52px; grid-template-rows: minmax(120px, 1.2fr) minmax(max-content, 1fr); /* the bottom row grows to fit the strip buttons */ gap: 10px; padding: 8px 12px; min-height: 0; }
     body.graphs #graphs { display: grid; }
     body.graphs.values #graphs { min-height: 56vh; flex: none; } /* grows past 56vh when the strip buttons need it, pushing the values down */
     body.graphs:not(.values) #graphs { flex: 1 0 auto; } /* fills the window, never shorter than its content */
@@ -134,6 +134,8 @@
     .graph h3 .state { margin-left: auto; color: #555; flex: none; }
     .graph h3 .state.on { color: var(--accent); }
     .graph .detail { font: 11px Menlo, monospace; color: var(--dim); min-height: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .graph .detail .val { color: var(--accent); } /* EQ gains lit, as the other panes' values */
+    .graph:not(.on) .detail .val { color: #9a9a9a; }
     .graph .plot { flex: 1 1 0; position: relative; min-height: 0; }
     .readout { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px 6px; margin: 4px 0 2px; } /* always 3 across: two rows at any width, long values shorten */
     .readout div { min-width: 0; }
